@@ -1,7 +1,7 @@
 <?php
 /*
  * Plugin Name: Content Stream Feed Reader
- * Description: Downloads and parses content from the specified Content Stream feed.
+ * Description: Downloads and parses content from the specified Content Stream feed, creating new posts.
  * Author: Mike Eaton
  * Version: 0.1
  */
@@ -118,10 +118,12 @@ class ContentStreamFeedReader {
 		delete_option( 'csfr_username' );
 		delete_option( 'csfr_password' );
 		delete_option( 'csfr_feed_id' );
-		delete_option( 'csfr_cron_enabled' );
 		delete_option( 'csfr_post_status' );
 		delete_option( 'csfr_post_as' );
+		delete_option( 'csfr_post_category' );
 		delete_option( 'csfr_cron_start' );
+		delete_option( 'csfr_cron_freq' );
+		delete_option( 'csfr_cron_enabled' );
 
 	}
 
@@ -174,9 +176,11 @@ class ContentStreamFeedReader {
 		}
 
 		$next_cron = wp_next_scheduled( 'cs_schedule_cron_import' );
-		$cron_info = ( false !== $next_cron ) ? date( 'l, M j, Y', $next_cron ) : '';
+		$cron_info = ( false !== $next_cron )
+			 ? '<p>Next scheduled import: ' . date( 'l, M j, Y', $next_cron ) . '</p>'
+			 : '<p>No import scheduled.</p>';
 
-		// Mark the inputs as disabled if the checkbox is not checked.
+		// Mark the cron inputs as disabled if the checkbox is not checked.
 		$checked = ( '1' === esc_html( get_option( 'csfr_cron_enabled' ) ) ) ? 'checked' : '';
 		$disabled = ( $checked ) ? '' : 'disabled';
 		?>
@@ -203,11 +207,35 @@ class ContentStreamFeedReader {
 					</tr>
 					</tbody>
 				</table>
+				<h2>Post Settings</h2>
+				<p>Set the author and status (draft or publish) the articles will be imported with.</p>
+				<table class="form-table">
+					<tbody>
+					<tØr>
+						<th><label for="cs_post_as">Post As</label></th>
+						<td><?php wp_dropdown_users( array( 'id' => 'cs_post_as', 'name' => 'cs_post_as', 'selected' => get_option( 'csfr_post_as'), ) ); ?>
+						</td>
+					</tØr>
+					<tr>
+						<th><label for="cs_post_category">Category</label></th>
+						<td><?php wp_dropdown_categories( array(
+								'id' => 'cs_post_category',
+								'name' => 'cs_post_category',
+								'selected' => get_option( 'csfr_post_category'),
+								'hide_empty' => false,
+							) ); ?>
+						</td>
+					</tr>
+					<tr>
+						<th>Post Status</th>
+						<td><input name="cs_post_status" id="cs_post_status_draft" type="radio" value="draft" <?php echo esc_html( $is_draft ); ?> /> <label for="cs_post_status_draft">Draft</label><br />
+							<input name="cs_post_status" id="cs_post_status_publish" type="radio" value="publish" <?php echo esc_html( $is_published ); ?> /> <label for="cs_post_status_publish">Publish</label></td>
+					</tr>
+					</tbody>
+				</table>
 				<h2>Scheduled Import</h2>
 				<p>When enabled by checking the box below and supplying a start date and frequency, import will take place automatically.</p>
-				<?php if ( ! empty( $cron_info ) ) { ?>
-				<p>Next scheduled import: <?php echo esc_html( $cron_info ); ?></p>
-				<?php } ?>
+				<?php echo $cron_info; ?>
 				<table class="form-table">
 					<tbody>
 					<tr>
@@ -230,22 +258,6 @@ class ContentStreamFeedReader {
 							} ?>
 						</select>
 						</td>
-					</tr>
-					</tbody>
-				</table>
-				<h2>Post Settings</h2>
-				<p>Set the author and status (draft or publish) the articles will be imported with.</p>
-				<table class="form-table">
-					<tbody>
-					<tr>
-						<th><label for="cs_post_as">Post As</label></th>
-						<td><?php wp_dropdown_users( array( 'id' => 'cs_post_as', 'name' => 'cs_post_as', 'selected' => get_option( 'csfr_post_as'), ) ); ?>
-						</td>
-					</tr>
-					<tr>
-						<th>Post Status</th>
-						<td><input name="cs_post_status" id="cs_post_status_draft" type="radio" value="draft" <?php echo esc_html( $is_draft ); ?> /> <label for="cs_post_status_draft">Draft</label><br />
-							<input name="cs_post_status" id="cs_post_status_publish" type="radio" value="publish" <?php echo esc_html( $is_published ); ?> /> <label for="cs_post_status_publish">Publish</label></td>
 					</tr>
 					</tbody>
 				</table>
@@ -361,6 +373,7 @@ class ContentStreamFeedReader {
 			? sanitize_text_field( $_POST['cs_post_status'] )
 			: 'draft';
 		$post_as_user = sanitize_text_field( $_POST['cs_post_as'] );
+		$category = sanitize_text_field( $_POST['cs_post_category'] );
 
 		// If either the cron start date or frequency change, we will need to update the cron.
 		$cron_start = ( isset( $_POST['cs_cron_start']) )
@@ -374,6 +387,7 @@ class ContentStreamFeedReader {
 		$cron_enabled = ( isset( $_POST['cron_enabled'] ) ) ? 1 : 0;
 		$cron_status_changed = ( intval( get_option( 'csfr_cron_enabled' ) ) !== $cron_enabled);
 
+		// Field validation
 		$errors = '';
 		if ( '' === $username || '' === $password || '' === $feed_id ) {
 			$errors .= '<p>Username, password, and feed ID are required.</p>';
@@ -388,6 +402,7 @@ class ContentStreamFeedReader {
 			update_option( 'csfr_feed_id', $feed_id );
 			update_option( 'csfr_post_status', $status );
 			update_option( 'csfr_post_as', $post_as_user );
+			update_option( 'csfr_post_category', $category );
 			update_option( 'csfr_cron_start', $cron_start );
 			update_option( 'csfr_cron_freq', $cron_freq );
 			update_option( 'csfr_cron_enabled', $cron_enabled );
@@ -541,11 +556,12 @@ class ContentStreamFeedReader {
 		$slug = sanitize_title( $title );
 		$post_author = intval( sanitize_text_field( get_option( 'csfr_post_as') ) );
 		$post_status = sanitize_text_field( get_option( 'csfr_post_status' ) );
+		$category = sanitize_text_field( get_option( 'csfr_post_category' ) );
 		$post = array(
 			'comment_status'  => 'closed',
 			'ping_status'   => 'closed',
 			'post_author'   => $post_author,
-			'post_category' => array( 'Blog' ),
+			'post_category' => array( $category ),
 			'post_name'   => $slug,
 			'post_title'    => $title,
 			'post_status'   => $post_status,
