@@ -76,11 +76,12 @@ class ContentStreamFeedReader {
 		register_activation_hook( __FILE__, array( $this, 'activation' ) );
 		register_deactivation_hook( __FILE__, array( $this, 'deactivation' ) );
 
+		$options = get_option( CSFR_OPTIONS );
 		$this->stream = new ContentStream(
 			'https://contentstream.cfemedia.com/api/',
-			get_option( 'csfr_username' ),
-			get_option( 'csfr_password' ),
-			get_option( 'csfr_feed_id' )
+			$options['username'],
+			$options['password'],
+			$options['feed_id']
 		);
 
 		$this->cron_freq = array(
@@ -161,7 +162,8 @@ class ContentStreamFeedReader {
 		// Are there local articles to import?
 		$articles = $this->get_articles_list();
 
-		if ( 'draft' === get_option( 'csfr_post_status' ) || '' === get_option( 'csfr_post_status' ) ) {
+		$options = get_option( CSFR_OPTIONS );
+		if ( 'draft' === $options['post_status'] || '' === $options['post_status'] ) {
 			$is_draft = 'checked';
 			$is_published = '';
 		} else {
@@ -175,7 +177,7 @@ class ContentStreamFeedReader {
 			 : '<p>No import scheduled.</p>';
 
 		// Mark the cron inputs as disabled if the checkbox is not checked.
-		$checked = ( '1' === esc_html( get_option( 'csfr_cron_enabled' ) ) ) ? 'checked' : '';
+		$checked = ( '1' === esc_html( $options['cron_enabled'] ) ) ? 'checked' : '';
 		$disabled = ( $checked ) ? '' : 'disabled';
 
 		// If there are remote or local items available to be imported, show the import buttons.
@@ -192,15 +194,15 @@ class ContentStreamFeedReader {
 					<tbody>
 					<tr>
 						<th><label for="cs_username">Username</label></th>
-						<td><input name="cs_username" id="cs_username" type="text" value="<?php echo esc_html( get_option( 'csfr_username' ) ); ?>" class="regular-text" /></td>
+						<td><input name="cs_username" id="cs_username" type="text" value="<?php echo esc_html( $options['username'] ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr>
 						<th><label for="cs_password">Password</label></th>
-						<td><input name="cs_password" id="cs_password" type="text" value="<?php echo esc_html( get_option( 'csfr_password' ) ); ?>" class="regular-text" /></td>
+						<td><input name="cs_password" id="cs_password" type="text" value="<?php echo esc_html( $options['password'] ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr>
 						<th><label for="cs_feed_id">Feed ID</label></th>
-						<td><input name="cs_feed_id" id="cs_feed_id" type="text" value="<?php echo esc_html( get_option( 'csfr_feed_id' ) ); ?>" class="regular-text" /></td>
+						<td><input name="cs_feed_id" id="cs_feed_id" type="text" value="<?php echo esc_html( $options['feed_id'] ); ?>" class="regular-text" /></td>
 					</tr>
 					</tbody>
 				</table>
@@ -210,7 +212,11 @@ class ContentStreamFeedReader {
 					<tbody>
 					<tØr>
 						<th><label for="cs_post_as">Post As</label></th>
-						<td><?php wp_dropdown_users( array( 'id' => 'cs_post_as', 'name' => 'cs_post_as', 'selected' => get_option( 'csfr_post_as'), ) ); ?>
+						<td><?php wp_dropdown_users( array(
+							'id' => 'cs_post_as',
+							'name' => 'cs_post_as',
+							'selected' => $options['post_as'],
+							) ); ?>
 						</td>
 					</tØr>
 					<tr>
@@ -218,7 +224,7 @@ class ContentStreamFeedReader {
 						<td><?php wp_dropdown_categories( array(
 								'id' => 'cs_post_category',
 								'name' => 'cs_post_category',
-								'selected' => get_option( 'csfr_post_category'),
+								'selected' => $options['post_category'],
 								'hide_empty' => false,
 							) ); ?>
 						</td>
@@ -242,7 +248,7 @@ class ContentStreamFeedReader {
 					<tr>
 						<th><label for="cs_cron_start">Start Date</label></th>
 						<td><input id="cs_cron_start" type="text" name="cs_cron_start"
-							value="<?php echo esc_html( get_option( 'csfr_cron_start' ) ); ?>" class="regular-text"
+							value="<?php echo esc_html( $options['cron_start'] ); ?>" class="regular-text"
 							<?php echo esc_html( $disabled ); ?> /></td>
 					</tr>
 					<tr>
@@ -250,7 +256,7 @@ class ContentStreamFeedReader {
 						<td><select name="cs_cron_freq" id="cs_cron_freq" <?php echo esc_html( $disabled ); ?>>
 							<?php
 							foreach ( $this->cron_freq as $key => $value ) {
-								$selected = ( get_option( 'csfr_cron_freq' ) === $key ) ? 'selected' : '';
+								$selected = ( $options['cron_freq'] === $key ) ? 'selected' : '';
 								?><option value="<?php echo esc_html( $key ); ?>" <?php echo esc_html( $selected ); ?>><?php echo esc_html( $value ); ?></option><?php
 							} ?>
 						</select>
@@ -366,6 +372,8 @@ class ContentStreamFeedReader {
 	 */
 	private function save_settings() {
 
+		$options = get_option( CSFR_OPTIONS );
+
 		// Sanitize the data coming in from the form.
 		$username = sanitize_email( $_POST['cs_username'] );
 		$password = sanitize_text_field( $_POST['cs_password'] );
@@ -379,14 +387,14 @@ class ContentStreamFeedReader {
 		// If either the cron start date or frequency change, we will need to update the cron.
 		$cron_start = ( isset( $_POST['cs_cron_start']) )
 			? sanitize_text_field( $_POST['cs_cron_start'] ) : '';
-		$cron_start_changed = ( get_option( 'csfr_cron_start') !== $cron_start );
+		$cron_start_changed = ( $options['cron_start'] !== $cron_start );
 
 		$cron_freq = ( isset( $_POST['cs_cron_freq'] ) && array_key_exists( $_POST['cs_cron_freq'], $this->cron_freq ) )
 			? sanitize_text_field( $_POST['cs_cron_freq'] ) : 'daily';
-		$cron_freq_changed = ( get_option( 'csfr_cron_freq' ) !== $cron_freq );
+		$cron_freq_changed = ( $options['cron_freq'] !== $cron_freq );
 
 		$cron_enabled = ( isset( $_POST['cron_enabled'] ) ) ? 1 : 0;
-		$cron_status_changed = ( intval( get_option( 'csfr_cron_enabled' ) ) !== $cron_enabled);
+		$cron_status_changed = ( intval( $options['cron_enabled'] ) !== $cron_enabled);
 
 		// Field validation
 		$errors = '';
@@ -398,15 +406,19 @@ class ContentStreamFeedReader {
 		}
 
 		if ( '' === $errors ) {
-			update_option( 'csfr_username', $username );
-			update_option( 'csfr_password', $password );
-			update_option( 'csfr_feed_id', $feed_id );
-			update_option( 'csfr_post_status', $status );
-			update_option( 'csfr_post_as', $post_as_user );
-			update_option( 'csfr_post_category', $category );
-			update_option( 'csfr_cron_start', $cron_start );
-			update_option( 'csfr_cron_freq', $cron_freq );
-			update_option( 'csfr_cron_enabled', $cron_enabled );
+
+			$options = array(
+				'username' => $username,
+				'password' =>$password,
+				'feed_id' =>$feed_id,
+				'post_status' =>$status,
+				'post_as' =>$post_as_user,
+				'post_category' => $category,
+				'cron_start' =>$cron_start,
+				'cron_freq' => $cron_freq,
+				'cron_enabled' =>$cron_enabled,
+			);
+			update_option( CSFR_OPTIONS, $options );
 
 			// Refresh the API connection settings.
 			$this->stream->username = $username;
@@ -553,11 +565,11 @@ class ContentStreamFeedReader {
 			$author .
 			$body_text .
 			$copyright;
-
+		$options = get_option( CSFR_OPTIONS );
 		$slug = sanitize_title( $title );
-		$post_author = intval( sanitize_text_field( get_option( 'csfr_post_as') ) );
-		$post_status = sanitize_text_field( get_option( 'csfr_post_status' ) );
-		$category = sanitize_text_field( get_option( 'csfr_post_category' ) );
+		$post_author = intval( sanitize_text_field( $options['post_as'] ) );
+		$post_status = sanitize_text_field( $options['post_status'] );
+		$category = sanitize_text_field( $options['post_category'] );
 		$post = array(
 			'comment_status'  => 'closed',
 			'ping_status'   => 'closed',
@@ -586,6 +598,7 @@ class ContentStreamFeedReader {
 }
 define( 'CSFR_ROOT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CSFR_CLASSES_DIR', CSFR_ROOT_DIR . '/classes/' );
+define( 'CSFR_OPTIONS', 'csfr_options' );
 
 require_once CSFR_CLASSES_DIR . 'content-stream.php';
 
