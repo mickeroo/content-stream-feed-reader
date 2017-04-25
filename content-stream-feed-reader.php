@@ -361,7 +361,7 @@ class ContentStreamFeedReader {
 	private function import_articles() {
 
 		$content_list = $this->stream->get_content_list();
-		$this->stream->download_content( $content_list, $this->upload_dir, $this->local_image_dir );
+		$this->stream->download_content( $content_list, $this->upload_dir, $this->local_image_dir, true );
 
 		$articles = $this->get_articles_list();
 		$this->import_local_articles( $articles );
@@ -484,10 +484,8 @@ class ContentStreamFeedReader {
 	 * Executes callback for scheduled import WP Cron task.
 	 */
 	public function cs_run_cron_import() {
-		// TODO Make me do something!!
-		error_log( 'Cron task called' );
-		$articles = $this->get_articles_list();
-		$this->import_local_articles( $articles );
+		// Run the download and import process.
+		$this->import_articles();
 	}
 
 	/**
