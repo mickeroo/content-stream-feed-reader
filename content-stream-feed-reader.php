@@ -76,13 +76,12 @@ class ContentStreamFeedReader {
 		register_activation_hook( __FILE__, array( $this, 'activation' ) );
 		register_deactivation_hook( __FILE__, array( $this, 'deactivation' ) );
 
-		$options = get_option( CSFR_OPTIONS );
-		$this->stream = new ContentStream(
-			'https://contentstream.cfemedia.com/api/',
-			$options['username'],
-			$options['password'],
-			$options['feed_id']
-		);
+		// Pull in the connetion params from the options array if they exist already.
+		$options    = get_option( CSFR_OPTIONS );
+		$username   = (isset ( $options['username'] ) ) ? $options['username'] : '';
+		$password   = (isset ( $options['password'] ) ) ? $options['password'] : '';
+		$feed_id    = (isset ( $options['feed_id'] ) ) ? $options['feed_id'] : '';
+		$this->stream = new ContentStream( 'https://contentstream.cfemedia.com/api/', $username, $password, $feed_id );
 
 		$this->cron_freq = array(
 			'daily' => 'Daily',
