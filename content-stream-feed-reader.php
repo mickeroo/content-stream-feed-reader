@@ -7,6 +7,7 @@
  */
 
 // TODO In uninstall make sure to remove files in uploads folder.
+// TODO Some sort of connection status indicator?
 /**
  * Class ContentStreamFeedReader
  */
@@ -183,6 +184,9 @@ class ContentStreamFeedReader {
 		// Mark the cron inputs as disabled if the checkbox is not checked.
 		$checked = ( '1' === esc_html( get_option( 'csfr_cron_enabled' ) ) ) ? 'checked' : '';
 		$disabled = ( $checked ) ? '' : 'disabled';
+
+		// If there are remote or local items available to be imported, show the import buttons.
+		$manual_import = ( count( $articles ) > 0 || $content_list->totalNumberInQueue > 0 ) ? true : false;
 		?>
 		<div class="wrap">
 			<h1>Content Stream Feed Reader</h1>
@@ -264,16 +268,20 @@ class ContentStreamFeedReader {
 				<p class="submit">
 					<input type="submit" name="settings-submit" id="settings-submit" class="button button-primary" value="Save Settings">
 				</p>
+				<?php if ( $manual_import ) { ?>
+				<br/>
+				<h2>Manual Import</h2>
 				<p class="submit">
 					<?php if ( $content_list->totalNumberInQueue > 0 ) { ?>
 					<input type="submit" name="import-articles" id="import-articles" class="button button-primary"
-						   value="Download and import <?php echo esc_html( $content_list->totalNumberInQueue ) . ' article(s)'; ?>">
+						   value="Download and import <?php echo esc_html( $content_list->totalNumberInQueue ) . ' article(s)'; ?>"> &nbsp;
 					<?php } ?>
 					<?php if ( count( $articles ) > 0 ) { ?>
 					<input type="submit" name="import-local" id="import-local" class="button button-primary"
 						   value="Import <?php echo count( $articles ); ?> article(s)">
 				<?php } ?>
 				</p>
+				<?php } ?>
 			</form>
 		</div>
 		<?php
