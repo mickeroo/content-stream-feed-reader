@@ -104,6 +104,11 @@ class ContentStreamFeedReader {
 			wp_mkdir_p( $this->upload_dir );
 		}
 
+		$imported = $this->upload_dir . DIRECTORY_SEPARATOR . 'imported';
+		if ( ! is_dir( $imported ) ) {
+			wp_mkdir_p( $imported );
+		}
+
 		if ( ! is_dir( $this->local_image_dir ) ) {
 			wp_mkdir_p( $this->local_image_dir );
 		}
@@ -113,19 +118,7 @@ class ContentStreamFeedReader {
 	 * Cleanup when the plugin is deactivated.
 	 */
 	public function deactivation() {
-
 		$this->disable_cron();
-
-		delete_option( 'csfr_username' );
-		delete_option( 'csfr_password' );
-		delete_option( 'csfr_feed_id' );
-		delete_option( 'csfr_post_status' );
-		delete_option( 'csfr_post_as' );
-		delete_option( 'csfr_post_category' );
-		delete_option( 'csfr_cron_start' );
-		delete_option( 'csfr_cron_freq' );
-		delete_option( 'csfr_cron_enabled' );
-
 	}
 
 	/**
