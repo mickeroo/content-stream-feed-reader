@@ -3,7 +3,7 @@
  * Plugin Name: Content Stream Feed Reader
  * Description: Downloads and parses content from the specified Content Stream feed, creating new posts.
  * Author: Mike Eaton
- * Version: 0.1
+ * Version: 1.0.0
  */
 
 /**
@@ -74,7 +74,7 @@ class ContentStreamFeedReader {
 		register_activation_hook( __FILE__, array( $this, 'activation' ) );
 		register_deactivation_hook( __FILE__, array( $this, 'deactivation' ) );
 
-		// Pull in the connetion params from the options array if they exist already.
+		// Pull in the connection params from the options array if they exist already.
 		$options    = get_option( CSFR_OPTIONS );
 		$username   = (isset( $options['username'] ) ) ? $options['username'] : '';
 		$password   = (isset( $options['password'] ) ) ? $options['password'] : '';
@@ -140,6 +140,11 @@ class ContentStreamFeedReader {
 
 	/**
 	 * Generate the admin settings form.
+	 *
+	 * Ideally we would have an admin page for displaying available articles and running the import manually but since
+	 * this is supposed to be primarily an automatic process, I added the import buttons to this page as backups to
+	 * keep the UI simple. Creating a separate import page would allow this page to be simpler and we could clean
+	 * up code that handles the multiple post types.
 	 */
 	public function render_settings_form() {
 
@@ -592,6 +597,7 @@ class ContentStreamFeedReader {
 define( 'CSFR_ROOT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CSFR_CLASSES_DIR', CSFR_ROOT_DIR . '/classes/' );
 define( 'CSFR_OPTIONS', 'csfr_options' );
+define( 'CSFR_VERSION', '1.0.0' );
 
 require_once CSFR_CLASSES_DIR . 'class-contentstream.php';
 
