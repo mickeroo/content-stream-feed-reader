@@ -6,8 +6,6 @@
  * Version: 0.1
  */
 
-// TODO In uninstall make sure to remove files in uploads folder.
-// TODO Some sort of connection status indicator?
 /**
  * Class ContentStreamFeedReader
  */
@@ -78,9 +76,9 @@ class ContentStreamFeedReader {
 
 		// Pull in the connetion params from the options array if they exist already.
 		$options    = get_option( CSFR_OPTIONS );
-		$username   = (isset ( $options['username'] ) ) ? $options['username'] : '';
-		$password   = (isset ( $options['password'] ) ) ? $options['password'] : '';
-		$feed_id    = (isset ( $options['feed_id'] ) ) ? $options['feed_id'] : '';
+		$username   = (isset( $options['username'] ) ) ? $options['username'] : '';
+		$password   = (isset( $options['password'] ) ) ? $options['password'] : '';
+		$feed_id    = (isset( $options['feed_id'] ) ) ? $options['feed_id'] : '';
 		$this->stream = new ContentStream( 'https://contentstream.cfemedia.com/api/', $username, $password, $feed_id );
 
 		$this->cron_freq = array(
@@ -128,9 +126,8 @@ class ContentStreamFeedReader {
 	 */
 	public function add_js_scripts( $hook ) {
 		if ( 'settings_page_content-stream' === $hook ) {
-			wp_enqueue_script( 'csfr-admin-js', plugin_dir_url( __FILE__ ) . '/js/admin.js',
-				array( 'jquery', 'jquery-ui-core', 'jquery-ui-datepicker' ), '1.0.0', true );
-			wp_enqueue_style( 'jquery-ui-datepicker' , '//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css');
+			wp_enqueue_script( 'csfr-admin-js', plugin_dir_url( __FILE__ ) . '/js/admin.js', array( 'jquery', 'jquery-ui-core', 'jquery-ui-datepicker' ), '1.0.0', true );
+			wp_enqueue_style( 'jquery-ui-datepicker' , '//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css' );
 		}
 	}
 
@@ -215,7 +212,7 @@ class ContentStreamFeedReader {
 							'id' => 'cs_post_as',
 							'name' => 'cs_post_as',
 							'selected' => $options['post_as'],
-							) ); ?>
+						) ); ?>
 						</td>
 					</tØr>
 					<tr>
@@ -225,7 +222,7 @@ class ContentStreamFeedReader {
 								'name' => 'cs_post_category',
 								'selected' => $options['post_category'],
 								'hide_empty' => false,
-							) ); ?>
+						) ); ?>
 						</td>
 					</tr>
 					<tr>
@@ -349,7 +346,6 @@ class ContentStreamFeedReader {
 					error_log( __FUNCTION__ . ' : Error creating post: ' . $post_id->get_error_message() );
 				}
 			}
-
 		}
 		?><div class="updated"><p><?php echo esc_html( $article_count ); ?> article(s) have been imported.</p></div><?php
 	}
@@ -384,7 +380,7 @@ class ContentStreamFeedReader {
 		$category = sanitize_text_field( $_POST['cs_post_category'] );
 
 		// If either the cron start date or frequency change, we will need to update the cron.
-		$cron_start = ( isset( $_POST['cs_cron_start']) )
+		$cron_start = ( isset( $_POST['cs_cron_start'] ) )
 			? sanitize_text_field( $_POST['cs_cron_start'] ) : '';
 		$cron_start_changed = ( $options['cron_start'] !== $cron_start );
 
@@ -408,14 +404,14 @@ class ContentStreamFeedReader {
 
 			$options = array(
 				'username' => $username,
-				'password' =>$password,
-				'feed_id' =>$feed_id,
-				'post_status' =>$status,
-				'post_as' =>$post_as_user,
+				'password' => $password,
+				'feed_id' => $feed_id,
+				'post_status' => $status,
+				'post_as' => $post_as_user,
 				'post_category' => $category,
-				'cron_start' =>$cron_start,
+				'cron_start' => $cron_start,
 				'cron_freq' => $cron_freq,
-				'cron_enabled' =>$cron_enabled,
+				'cron_enabled' => $cron_enabled,
 			);
 			update_option( CSFR_OPTIONS, $options );
 
@@ -443,9 +439,9 @@ class ContentStreamFeedReader {
 			</div> <?php
 		} else { ?>
 			<div class="error">
-				<?php echo $errors; ?>
+				<?php echo esc_html( $errors ); ?>
 			</div> <?php
-		}
+		} // End if().
 	}
 
 	/**
@@ -597,6 +593,6 @@ define( 'CSFR_ROOT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CSFR_CLASSES_DIR', CSFR_ROOT_DIR . '/classes/' );
 define( 'CSFR_OPTIONS', 'csfr_options' );
 
-require_once CSFR_CLASSES_DIR . 'content-stream.php';
+require_once CSFR_CLASSES_DIR . 'class-contentstream.php';
 
 ContentStreamFeedReader::get_instance();

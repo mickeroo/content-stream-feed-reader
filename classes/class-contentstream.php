@@ -173,7 +173,8 @@ class ContentStream {
 						$article_asset_url = $response_get_article->arrArticleAssetURL;
 
 						// Save each image and display file url.
-						for ( $image_counter = 0; $image_counter < count( $article_asset_url ); $image_counter ++ ) {
+						$article_asset_count = count( $article_asset_url );
+						for ( $image_counter = 0; $image_counter < $article_asset_count; $image_counter ++ ) {
 							$current_asset_url = $article_asset_url[ $image_counter ];
 							$current_file_name = basename( $current_asset_url );
 
