@@ -163,7 +163,7 @@ class ContentStreamFeedReader {
 		if ( 1 === $content_list->errorOccurred )  {
 			if ( 'Unauthorized Access' == $content_list->errorDescription ) {
 				echo '<div class="error">
-					<p>The username and/or password are invalid. Please correct the values entered and try again.</p>
+					<p>Please check the username, password, and feed ID fields. There was an authentication error connecting to the Content Stream service.</p>
 				</div>';
 			} else {
 				echo '<div class="error">
