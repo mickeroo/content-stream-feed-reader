@@ -3,7 +3,7 @@
  * Plugin Name: Content Stream Feed Reader
  * Description: Downloads and parses content from the specified Content Stream feed, creating new posts.
  * Author: Mike Eaton
- * Version: 1.0.0
+ * Version: 1.0.1
  */
 
 /**
@@ -609,7 +609,7 @@ class ContentStreamFeedReader {
 define( 'CSFR_ROOT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CSFR_CLASSES_DIR', CSFR_ROOT_DIR . '/classes/' );
 define( 'CSFR_OPTIONS', 'csfr_options' );
-define( 'CSFR_VERSION', '1.0.0' );
+define( 'CSFR_VERSION', '1.0.1' );
 
 require_once CSFR_CLASSES_DIR . 'class-contentstream.php';
 
