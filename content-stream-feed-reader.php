@@ -160,6 +160,18 @@ class ContentStreamFeedReader {
 		/** Response object from ContentStream. @var getContentListResponse */
 		$content_list = $this->stream->get_content_list();
 
+		if ( 1 === $content_list->errorOccurred )  {
+			if ( 'Unauthorized Access' == $content_list->errorDescription ) {
+				echo '<div class="error">
+					<p>The username and/or password are invalid. Please correct the values entered and try again.</p>
+				</div>';
+			} else {
+				echo '<div class="error">
+					<p>There was an error connecting to the Content Stream service: ' . $content_list->errorDescription . '</p>
+				</div>';
+			}
+		}
+
 		// Are there local articles to import?
 		$articles = $this->get_articles_list();
 
